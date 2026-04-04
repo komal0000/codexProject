@@ -1,0 +1,122 @@
+[
+  {
+    "source": "techlekh.com",
+    "subject": "Startup founders look for lightweight CRM alternatives",
+    "signal_type": "icp",
+    "segment": "startups and product teams",
+    "city": "Kathmandu",
+    "channel": "LinkedIn",
+    "confidence": 0.83,
+    "notes": "Founder-led teams often delay full CRM purchases and prefer simpler workflow tools in early growth stages.",
+    "url": "https://techlekh.com/",
+    "_input_file": "raw_market_signals.json"
+  },
+  {
+    "source": "linkedin.com",
+    "subject": "Kathmandu agencies hiring account managers",
+    "signal_type": "icp",
+    "segment": "agencies and consultancies",
+    "city": "Kathmandu",
+    "channel": "LinkedIn",
+    "confidence": 0.79,
+    "notes": "Agency hiring patterns suggest demand for better lead capture and follow-up operations before teams scale.",
+    "url": "https://www.linkedin.com/",
+    "_input_file": "raw_market_signals.json"
+  },
+  {
+    "source": "facebook.com",
+    "subject": "Local business owner communities share lead-gen questions",
+    "signal_type": "channel",
+    "segment": "smes and local businesses",
+    "city": "Lalitpur",
+    "channel": "Facebook",
+    "confidence": 0.76,
+    "notes": "Facebook groups remain active for operator questions and vendor recommendations in Nepal urban markets.",
+    "url": "https://www.facebook.com/",
+    "_input_file": "raw_market_signals.json"
+  },
+  {
+    "source": "google search",
+    "subject": "CRM software Nepal",
+    "signal_type": "channel",
+    "segment": "startups and product teams",
+    "city": "Urban Nepal",
+    "channel": "Google Search",
+    "confidence": 0.72,
+    "notes": "Search-led discovery is relevant when buyers are already comparing operational tooling.",
+    "url": "https://www.google.com/search?q=crm+software+nepal",
+    "_input_file": "raw_market_signals.json"
+  },
+  {
+    "source": "zoho.com",
+    "subject": "Zoho CRM",
+    "signal_type": "competitor",
+    "segment": "b2b services",
+    "city": "Nationwide",
+    "channel": "Google Search",
+    "confidence": 0.74,
+    "notes": "Established CRM option likely to appear in Nepal software comparisons because of price-sensitive tiers.",
+    "url": "https://www.zoho.com/crm/",
+    "_input_file": "raw_market_signals.json"
+  },
+  {
+    "source": "hubspot.com",
+    "subject": "HubSpot Starter",
+    "signal_type": "competitor",
+    "segment": "startups and product teams",
+    "city": "Nationwide",
+    "channel": "Google Search",
+    "confidence": 0.68,
+    "notes": "Well-known global CRM benchmark that shapes local buyer expectations even when adoption is limited.",
+    "url": "https://www.hubspot.com/products/crm",
+    "_input_file": "raw_market_signals.json"
+  },
+  {
+    "source": "yellowpagesnepal.com",
+    "subject": "Agency directories",
+    "signal_type": "lead_source",
+    "segment": "agencies and consultancies",
+    "city": "Kathmandu",
+    "channel": "Google Search",
+    "confidence": 0.77,
+    "notes": "Local directories can seed prospect lists for service businesses with clear contact details.",
+    "url": "https://yellowpagesnepal.com/",
+    "_input_file": "raw_market_signals.json"
+  },
+  {
+    "source": "linkedin.com",
+    "subject": "Sales and operations managers in Kathmandu startups",
+    "signal_type": "lead_source",
+    "segment": "startups and product teams",
+    "city": "Kathmandu",
+    "channel": "LinkedIn",
+    "confidence": 0.84,
+    "notes": "LinkedIn is a practical source for identifying operators at venture-backed or growth-stage companies.",
+    "url": "https://www.linkedin.com/",
+    "_input_file": "raw_market_signals.json"
+  },
+  {
+    "source": "meetup.com",
+    "subject": "Founder and growth community events",
+    "signal_type": "channel",
+    "segment": "startups and product teams",
+    "city": "Kathmandu",
+    "channel": "Events",
+    "confidence": 0.66,
+    "notes": "Offline communities can support trust-building for B2B SaaS in a relationship-driven market.",
+    "url": "https://www.meetup.com/",
+    "_input_file": "raw_market_signals.json"
+  },
+  {
+    "source": "manual",
+    "subject": "Will Nepali-language messaging outperform English-first campaigns outside Kathmandu?",
+    "signal_type": "open_question",
+    "segment": "smes and local businesses",
+    "city": "Nationwide",
+    "channel": "Mixed",
+    "confidence": 0.55,
+    "notes": "The current workflow is urban and English-first; broader localization remains unvalidated.",
+    "url": "",
+    "_input_file": "raw_market_signals.json"
+  }
+]

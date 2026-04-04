@@ -1,0 +1,12 @@
+{
+  "product_name": "PipelinePilot",
+  "product_description": "A lightweight SaaS platform that helps small teams capture, qualify, and follow up on inbound leads without a full CRM rollout.",
+  "target_customer_guess": "Urban Nepal service businesses, agencies, and startups that need better lead tracking before they hire dedicated sales operations staff.",
+  "pricing_model": "Monthly subscription with a free trial and team-based paid tiers.",
+  "competitor_examples": [
+    "HubSpot Starter",
+    "Zoho CRM",
+    "Notion + manual spreadsheets"
+  ],
+  "research_goal": "Validate which buyer segments and digital channels in Nepal should be prioritized for an initial demand-generation motion."
+}
