@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from importlib.util import find_spec
-from typing import Any
+from typing import Any, Awaitable
 
 try:
     from nepal_market_lib import infer_city, normalize_whitespace
@@ -12,6 +12,8 @@ except ModuleNotFoundError:  # pragma: no cover
 from .channel_collector import collect_channels
 from .competitor_collector_refined import collect_competitors
 from .web_search_collector import collect_from_web_search
+
+DEFAULT_COLLECTOR_TIMEOUT_SECONDS = 45.0
 
 if find_spec("loguru"):
     from loguru import logger
@@ -40,6 +42,7 @@ def dedupe_signals(signals: list[dict[str, Any]]) -> list[dict[str, Any]]:
 async def collect_all_live_signals(
     brief: dict[str, Any],
     max_per_collector: int = 10,
+    collector_timeout_seconds: float = DEFAULT_COLLECTOR_TIMEOUT_SECONDS,
 ) -> list[dict[str, Any]]:
     """
     Runs all collectors in parallel using asyncio.gather().
@@ -51,33 +54,61 @@ async def collect_all_live_signals(
     product_name = normalize_whitespace(brief.get("product_name"))
     product_description = normalize_whitespace(brief.get("product_description"))
     city_hint = infer_city(" ".join((target_customer, product_description)))
+    async def run_collector(
+        collector_name: str,
+        collector_call: Awaitable[list[dict[str, Any]]],
+    ) -> list[dict[str, Any]]:
+        task = asyncio.create_task(collector_call)
+        done, _ = await asyncio.wait({task}, timeout=collector_timeout_seconds)
+        if not done:
+            task.cancel()
+            logger.warning(
+                "live_collectors.timeout "
+                f"collector={collector_name} timeout_seconds={collector_timeout_seconds}"
+            )
+            return []
+        try:
+            return task.result()
+        except Exception as exc:
+            logger.warning(f"live_collectors.failed collector={collector_name} error={exc!s}")
+            return []
+
     tasks = [
-        collect_from_web_search(
+        run_collector(
+            "web_icp",
+            collect_from_web_search(
             query=f"{target_customer} Nepal market",
             signal_type="icp",
             city=city_hint,
             max_results=max_per_collector,
         ),
-        collect_from_web_search(
+        ),
+        run_collector(
+            "web_lead_source",
+            collect_from_web_search(
             query=f"{product_name} Nepal lead sources",
             signal_type="lead_source",
             city=city_hint,
             max_results=max_per_collector,
         ),
-        collect_competitors(
+        ),
+        run_collector(
+            "competitors",
+            collect_competitors(
             product_description=product_description,
             competitor_examples=list(brief.get("competitor_examples", [])),
             city="Nepal",
             max_results=max_per_collector,
         ),
-        collect_channels(segment=target_customer or product_name or "businesses", city=city_hint),
+        ),
+        run_collector(
+            "channels",
+            collect_channels(segment=target_customer or product_name or "businesses", city=city_hint),
+        ),
     ]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+    results = await asyncio.gather(*tasks)
     merged: list[dict[str, Any]] = []
     for result in results:
-        if isinstance(result, Exception):
-            logger.warning(f"live_collectors.failed error={result!s}")
-            continue
         merged.extend(result)
     deduped = dedupe_signals(merged)
     logger.info(f"live_collectors.completed signals={len(deduped)}")

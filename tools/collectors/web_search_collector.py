@@ -134,7 +134,12 @@ def _search_sync(query: str, max_results: int) -> list[SearchResult]:
     else:
         from duckduckgo_search import DDGS
 
-    with DDGS() as ddgs:
+    try:
+        ddgs_client = DDGS(timeout=SEARCH_TIMEOUT_SECONDS)
+    except TypeError:
+        ddgs_client = DDGS()
+
+    with ddgs_client as ddgs:
         payload = list(ddgs.text(query, max_results=max_results))
     return [
         SearchResult(
@@ -148,11 +153,13 @@ def _search_sync(query: str, max_results: int) -> list[SearchResult]:
 
 async def search_text_results(query: str, max_results: int) -> list[SearchResult]:
     logger.info(f"web_search.query query={query!r} max_results={max_results}")
+    search_task = asyncio.create_task(asyncio.to_thread(_search_sync, query, max_results))
     try:
-        return await asyncio.wait_for(
-            asyncio.to_thread(_search_sync, query, max_results),
-            timeout=SEARCH_TIMEOUT_SECONDS,
-        )
+        done, _ = await asyncio.wait({search_task}, timeout=SEARCH_TIMEOUT_SECONDS)
+        if not done:
+            search_task.cancel()
+            raise asyncio.TimeoutError
+        return search_task.result()
     except asyncio.TimeoutError:
         logger.warning(f"web_search.timeout query={query!r} timeout_seconds={SEARCH_TIMEOUT_SECONDS}")
     except httpx.HTTPError as exc:

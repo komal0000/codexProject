@@ -71,30 +71,49 @@ export function ResearchJobClient({
 }: ResearchJobClientProps) {
   const [job, setJob] = useState(initialJob);
   const [result, setResult] = useState<ResearchResult | null>(initialResult);
+  const [pollError, setPollError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (job.status === "done" || job.status === "failed") {
+    if (job.status === "failed" || (job.status === "done" && result)) {
       return;
     }
+
+    let cancelled = false;
     const timer = window.setInterval(async () => {
       try {
         const nextJob = await getResearchJob(jobId);
+        if (cancelled) {
+          return;
+        }
         startTransition(() => {
           setJob(nextJob);
+          setPollError(null);
         });
-        if (nextJob.status === "done") {
+
+        if (nextJob.status === "done" && !result) {
           const nextResult = await getResearchResult(jobId);
+          if (cancelled) {
+            return;
+          }
           startTransition(() => {
             setResult(nextResult);
           });
           window.clearInterval(timer);
         }
       } catch {
-        window.clearInterval(timer);
+        if (cancelled) {
+          return;
+        }
+        startTransition(() => {
+          setPollError("Could not refresh job status. Retrying automatically every 3 seconds.");
+        });
       }
     }, 3000);
-    return () => window.clearInterval(timer);
-  }, [job.status, jobId]);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [job.status, jobId, result]);
 
   const orderedTabs = useMemo(
     () => (result ? Object.entries(result.tabs) : []),
@@ -148,6 +167,7 @@ export function ResearchJobClient({
             <p className="mt-4 text-sm leading-7 text-slate-600">
               The backend is collecting live signals, normalizing them, and building the research tabs. This page polls every 3 seconds.
             </p>
+            {pollError ? <p className="mt-3 text-sm text-amber-700">{pollError}</p> : null}
           </div>
         ) : null}
 

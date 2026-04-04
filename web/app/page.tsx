@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { listResearchJobs } from "@/lib/api";
+import { listResearchJobs, type JobListItem } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,18 @@ function statusClasses(status: string): string {
 }
 
 export default async function DashboardPage() {
-  const jobs = await listResearchJobs();
+  const apiBaseUrl =
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
+
+  let jobs: JobListItem[] = [];
+  let loadError: string | null = null;
+
+  try {
+    jobs = await listResearchJobs();
+  } catch {
+    loadError =
+      `Dashboard could not reach the research API at ${apiBaseUrl}. Start the backend and refresh this page.`;
+  }
 
   return (
     <main className="space-y-6">
@@ -31,7 +42,21 @@ export default async function DashboardPage() {
         </p>
       </section>
 
-      {jobs.length === 0 ? (
+      {loadError ? (
+        <section className="rounded-[2rem] border border-amber-200 bg-amber-50/80 p-8 shadow-soft">
+          <h2 className="text-2xl font-semibold text-amber-900">Backend is not running</h2>
+          <p className="mt-3 text-amber-900/90">{loadError}</p>
+          <p className="mt-4 text-sm text-amber-900/80">Run this from the project root:</p>
+          <code className="mt-2 block rounded-xl bg-white/80 px-4 py-3 text-sm text-amber-900">
+            uvicorn api.main:app --reload --host 127.0.0.1 --port 8000
+          </code>
+          <p className="mt-4 text-sm text-amber-900/80">
+            If your API is running elsewhere, set NEXT_PUBLIC_API_BASE_URL in your web environment and restart Next.js.
+          </p>
+        </section>
+      ) : null}
+
+      {!loadError && jobs.length === 0 ? (
         <section className="rounded-[2rem] border border-dashed border-ocean/30 bg-white/65 p-10 text-center shadow-soft">
           <h2 className="text-2xl font-semibold text-ink">No research jobs yet</h2>
           <p className="mt-3 text-slate-600">
@@ -44,7 +69,7 @@ export default async function DashboardPage() {
             New Research
           </Link>
         </section>
-      ) : (
+      ) : !loadError ? (
         <section className="grid gap-4">
           {jobs.map((job) => (
             <Link
@@ -72,7 +97,7 @@ export default async function DashboardPage() {
             </Link>
           ))}
         </section>
-      )}
+      ) : null}
     </main>
   );
 }

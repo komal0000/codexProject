@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import unittest
 from unittest.mock import AsyncMock, patch
 
@@ -86,6 +87,51 @@ class CollectorTests(unittest.IsolatedAsyncioTestCase):
         ):
             signals = await collect_all_live_signals(brief, max_per_collector=3)
         self.assertEqual({item["signal_type"] for item in signals}, {"icp", "channel"})
+
+    async def test_collect_all_live_signals_times_out_hung_collector(self) -> None:
+        brief = {
+            "product_name": "PipelinePilot",
+            "product_description": "Lead capture and follow-up for small teams.",
+            "target_customer_guess": "Urban Nepal service businesses",
+            "pricing_model": "subscription",
+            "competitor_examples": ["Zoho CRM"],
+            "research_goal": "Find channels",
+        }
+
+        async def slow_competitor_collector(*args, **kwargs):
+            await asyncio.sleep(60)
+            return []
+
+        with patch(
+            "tools.collectors.collect_from_web_search",
+            new=AsyncMock(
+                return_value=[
+                    {
+                        "signal_type": "icp",
+                        "subject": "ICP",
+                        "url": "https://a",
+                        "source": "a",
+                        "segment": "smes",
+                        "city": "Kathmandu",
+                        "channel": "Google Search",
+                        "confidence": 0.8,
+                        "notes": "note",
+                    }
+                ]
+            ),
+        ), patch(
+            "tools.collectors.collect_competitors",
+            new=slow_competitor_collector,
+        ), patch(
+            "tools.collectors.collect_channels",
+            new=AsyncMock(return_value=[]),
+        ):
+            signals = await collect_all_live_signals(
+                brief,
+                max_per_collector=3,
+                collector_timeout_seconds=0.01,
+            )
+        self.assertEqual({item["signal_type"] for item in signals}, {"icp"})
 
     async def test_collect_competitors_prefers_official_brand_result(self) -> None:
         fake_results = [
