@@ -28,23 +28,25 @@ Use [`examples/nepal_saas_brief.json`](../examples/nepal_saas_brief.json) as the
 
 ## Default Run Sequence
 1. Confirm the brief has all required fields.
-2. Merge one or more raw source files into one canonical dataset.
-3. Normalize rows into the standard schema.
-4. Validate required fields, confidence values, and duplicate clusters.
-5. Build research tabs:
+2. When live collection is enabled, run the async web collectors to fetch fresh signals for ICPs, competitors, channels, and lead sources.
+3. Merge any live results with one or more local raw source files into one canonical dataset.
+4. Normalize rows into the standard schema.
+5. Validate required fields, confidence values, and duplicate clusters.
+6. Build research tabs:
    - `ICPs`
    - `Competitors`
    - `Channels`
    - `Lead Sources`
    - `Open Questions`
-6. Generate a strategy summary in Markdown.
-7. Export the tabs and summary to Google Sheets and Docs when credentials are available.
+7. Generate a strategy summary in Markdown.
+8. Export the tabs and summary to Google Sheets and Docs when credentials are available.
 
 ## Example Command
 ```powershell
 python tools/run_nepal_market_research.py `
   --brief examples/nepal_saas_brief.json `
-  --sources examples/raw_market_signals.json
+  --sources examples/raw_market_signals.json `
+  --live
 ```
 
 Add `--export-google --credentials path\to\service_account.json` once Google access is configured.
@@ -60,6 +62,7 @@ Add `--export-google --credentials path\to\service_account.json` once Google acc
 
 ## Failure Handling
 - If the brief is missing required fields, stop and fix the brief first.
+- If live collection returns zero signals, proceed with local data and inspect the search dependency or queries before re-running.
 - If normalization fails on an unknown `signal_type`, update the input row or extend the signal type mapping intentionally.
 - If validation returns errors, do not export. Fix the source rows and re-run.
 - If Google export fails because of missing credentials or libraries, keep the local outputs and resolve configuration before re-running export.

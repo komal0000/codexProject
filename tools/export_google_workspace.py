@@ -3,8 +3,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from nepal_market_lib import load_json
 
@@ -131,7 +134,9 @@ def main() -> int:
     if not args.credentials:
         raise SystemExit("GOOGLE_SERVICE_ACCOUNT_FILE or --credentials is required.")
     tabs_payload = load_json(args.tabs)
-    tabs = tabs_payload.get("tabs", tabs_payload)
+    if not isinstance(tabs_payload, dict):
+        raise ValueError("--tabs JSON must contain a tab-name-to-rows mapping.")
+    tabs = tabs_payload
     summary_text = Path(args.summary).read_text(encoding="utf-8")
     sheets_service, docs_service, drive_service = load_services(args.credentials)
     sheet_result = export_sheet(

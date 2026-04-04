@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import subprocess
 import sys
 from pathlib import Path
 
-from nepal_market_lib import run_research_pipeline
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from collectors import collect_all_live_signals
+from nepal_market_lib import default_output_dir, load_json, run_research_pipeline, write_json
 
 
 def parse_args() -> argparse.Namespace:
@@ -14,7 +18,8 @@ def parse_args() -> argparse.Namespace:
         description="Run the end-to-end Nepal SaaS market research pipeline."
     )
     parser.add_argument("--brief", required=True, help="Research brief JSON file.")
-    parser.add_argument("--sources", nargs="+", required=True, help="Raw source JSON/CSV files.")
+    parser.add_argument("--sources", nargs="*", default=[], help="Raw source JSON/CSV files.")
+    parser.add_argument("--live", action="store_true", help="Collect live market signals before running the pipeline.")
     parser.add_argument(
         "--output-dir",
         default=None,
@@ -32,7 +37,21 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    result = run_research_pipeline(args.brief, args.sources, args.output_dir)
+    if not args.sources and not args.live:
+        raise SystemExit("Provide --sources, --live, or both.")
+    output_dir = Path(args.output_dir) if args.output_dir else None
+    source_paths = list(args.sources)
+    live_signals: list[dict[str, object]] = []
+    if args.live:
+        brief = load_json(args.brief)
+        live_signals = asyncio.run(collect_all_live_signals(brief))
+        output_root = output_dir or default_output_dir()
+        live_path = write_json(output_root / "live_signals.json", live_signals)
+        source_paths = [str(live_path), *source_paths]
+        output_dir = output_root
+    result = run_research_pipeline(args.brief, source_paths, output_dir)
+    if args.live:
+        result["live_signals_count"] = len(live_signals)
     if args.export_google:
         export_script = Path(__file__).resolve().parent / "export_google_workspace.py"
         command = [

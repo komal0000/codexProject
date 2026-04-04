@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from nepal_market_lib import load_records_from_path, validate_signals, write_json
 

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -49,6 +52,30 @@ class NepalMarketPipelineTests(unittest.TestCase):
             self.assertTrue((output_dir / "strategy_summary.md").exists())
             tabs_payload = load_json(output_dir / "research_tabs.json")
             self.assertIn("ICPs", tabs_payload)
+            self.assertNotIn("tabs", tabs_payload)
+
+    def test_run_cli_from_project_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "tools" / "run_nepal_market_research.py"),
+                    "--brief",
+                    str(BRIEF_PATH),
+                    "--sources",
+                    str(RAW_SIGNALS_PATH),
+                    "--output-dir",
+                    temp_dir,
+                ],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 0, msg=completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(Path(payload["output_dir"]), Path(temp_dir))
+            self.assertTrue((Path(temp_dir) / "research_tabs.json").exists())
 
 
 if __name__ == "__main__":
