@@ -5,11 +5,23 @@ export type ResearchBrief = {
   pricing_model: string;
   competitor_examples: string[];
   research_goal: string;
+  mode?: ResearchMode;
+};
+
+export type ResearchMode = "fast_draft" | "free_first" | "grounded_paid";
+
+export type SourcePage = {
+  title: string;
+  url: string;
+  source: string;
+  query: string;
 };
 
 export type JobStatus = {
   job_id: string;
   status: "queued" | "running" | "done" | "failed";
+  mode: ResearchMode;
+  stage: string | null;
   created_at: string;
   completed_at: string | null;
   error: string | null;
@@ -22,16 +34,20 @@ export type JobListItem = JobStatus & {
 export type JobCreateResponse = {
   job_id: string;
   status: "queued";
+  mode: ResearchMode;
 };
 
 export type ResearchResult = {
   job_id: string;
   brief: ResearchBrief;
+  mode: ResearchMode;
   tabs: Record<string, Array<Record<string, string | number | null>>>;
   strategy_summary: string;
   validation: Record<string, unknown>;
   sources_count: number;
   live_signals_count: number;
+  citations_count: number;
+  source_pages: SourcePage[];
   created_at: string;
 };
 

@@ -13,7 +13,7 @@ from .channel_collector import collect_channels
 from .competitor_collector_refined import collect_competitors
 from .web_search_collector import collect_from_web_search
 
-DEFAULT_COLLECTOR_TIMEOUT_SECONDS = 45.0
+DEFAULT_COLLECTOR_TIMEOUT_SECONDS = 12.0
 
 if find_spec("loguru"):
     from loguru import logger
@@ -39,6 +39,22 @@ def dedupe_signals(signals: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return deduped
 
 
+def normalize_target_segment(target_customer: str, product_name: str) -> str:
+    normalized_target = normalize_whitespace(target_customer)
+    normalized_product_name = normalize_whitespace(product_name)
+    if not normalized_target:
+        return normalized_product_name or "businesses"
+
+    lower_target = normalized_target.lower()
+    if "customer" in lower_target or "customers" in lower_target:
+        city_hint = infer_city(normalized_target)
+        if any(token in lower_target for token in ("shop", "shops", "store", "stores", "retail")):
+            return normalize_whitespace(f"small shops {city_hint}").strip()
+        return normalized_product_name or "businesses"
+
+    return normalized_target
+
+
 async def collect_all_live_signals(
     brief: dict[str, Any],
     max_per_collector: int = 10,
@@ -53,7 +69,8 @@ async def collect_all_live_signals(
     target_customer = normalize_whitespace(brief.get("target_customer_guess"))
     product_name = normalize_whitespace(brief.get("product_name"))
     product_description = normalize_whitespace(brief.get("product_description"))
-    city_hint = infer_city(" ".join((target_customer, product_description)))
+    segment_hint = normalize_target_segment(target_customer, product_name)
+    city_hint = infer_city(" ".join((target_customer, product_description, segment_hint)))
     async def run_collector(
         collector_name: str,
         collector_call: Awaitable[list[dict[str, Any]]],
@@ -77,33 +94,37 @@ async def collect_all_live_signals(
         run_collector(
             "web_icp",
             collect_from_web_search(
-            query=f"{target_customer} Nepal market",
+            query=f"{segment_hint} Nepal market demand",
             signal_type="icp",
             city=city_hint,
-            max_results=max_per_collector,
+            max_results=min(max_per_collector, 5),
         ),
         ),
         run_collector(
             "web_lead_source",
             collect_from_web_search(
-            query=f"{product_name} Nepal lead sources",
+            query=f"{segment_hint} Nepal business directory WhatsApp",
             signal_type="lead_source",
             city=city_hint,
-            max_results=max_per_collector,
+            max_results=min(max_per_collector, 4),
         ),
         ),
         run_collector(
             "competitors",
             collect_competitors(
-            product_description=product_description,
-            competitor_examples=list(brief.get("competitor_examples", [])),
-            city="Nepal",
-            max_results=max_per_collector,
+                product_description=product_description,
+                competitor_examples=list(brief.get("competitor_examples", [])),
+                city="Nepal",
+                max_results=min(max_per_collector, 4),
         ),
         ),
         run_collector(
             "channels",
-            collect_channels(segment=target_customer or product_name or "businesses", city=city_hint),
+            collect_channels(
+                segment=segment_hint or product_name or "businesses",
+                city=city_hint,
+                max_results_per_query=3,
+            ),
         ),
     ]
     results = await asyncio.gather(*tasks)

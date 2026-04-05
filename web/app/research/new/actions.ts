@@ -27,6 +27,7 @@ export async function submitResearchAction(formData: FormData) {
     pricing_model: String(formData.get("pricing_model") ?? ""),
     competitor_examples: parseCompetitors(String(formData.get("competitors_json") ?? "[]")),
     research_goal: String(formData.get("research_goal") ?? ""),
+    mode: String(formData.get("mode") ?? "free_first") as ResearchBrief["mode"],
   };
   const response = await createResearchJob(brief);
   redirect(`/research/${response.job_id}`);

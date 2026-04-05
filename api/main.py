@@ -5,7 +5,11 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from tools.env_loader import load_env_file
 from api.routes import router as research_router
+
+
+load_env_file()
 
 
 def allowed_origins() -> list[str]:

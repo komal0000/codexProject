@@ -25,6 +25,37 @@ function statusClasses(status: JobStatus["status"]): string {
   return "bg-sky-100 text-sky-700";
 }
 
+function formatStage(stage: string | null): string {
+  if (!stage) {
+    return "Waiting for the backend to start.";
+  }
+  if (stage === "collecting_live_signals") {
+    return "Collecting live signals from the web.";
+  }
+  if (stage === "planning_queries") {
+    return "Planning a focused research pass.";
+  }
+  if (stage === "fetching_sources") {
+    return "Searching and fetching source pages.";
+  }
+  if (stage === "extracting_signals") {
+    return "Extracting structured signals from the evidence.";
+  }
+  if (stage === "building_report") {
+    return "Preparing the source-backed brief.";
+  }
+  if (stage === "running_pipeline") {
+    return "Normalizing, validating, and building research tabs.";
+  }
+  if (stage === "complete") {
+    return "Research complete.";
+  }
+  if (stage === "failed") {
+    return "Research failed.";
+  }
+  return stage.replace(/_/g, " ");
+}
+
 function renderSummary(summary: string) {
   return summary.split("\n").map((line, index) => {
     const value = line.trim();
@@ -151,6 +182,9 @@ export function ResearchJobClient({
             <p className="mt-3 text-sm text-slate-600">
               Created {new Date(job.created_at).toLocaleString()}
             </p>
+            <p className="mt-2 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+              Mode: {(result?.mode ?? job.mode).replace(/_/g, " ")}
+            </p>
           </div>
           <span
             className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${statusClasses(job.status)}`}
@@ -165,7 +199,7 @@ export function ResearchJobClient({
               <div className="h-full w-1/2 animate-pulse rounded-full bg-gradient-to-r from-ocean to-tide" />
             </div>
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              The backend is collecting live signals, normalizing them, and building the research tabs. This page polls every 3 seconds.
+              {formatStage(job.stage)} This page polls every 3 seconds.
             </p>
             {pollError ? <p className="mt-3 text-sm text-amber-700">{pollError}</p> : null}
           </div>
@@ -183,7 +217,7 @@ export function ResearchJobClient({
                   Strategy Summary
                 </p>
                 <p className="mt-2 text-sm text-slate-500">
-                  {result.live_signals_count} live signals processed into {orderedTabs.length} research tabs.
+                  {result.live_signals_count} signals processed into {orderedTabs.length} research tabs. {result.citations_count} cited sources captured.
                 </p>
               </div>
               <button
@@ -239,6 +273,36 @@ export function ResearchJobClient({
                 </div>
               </div>
             ))}
+          </section>
+
+          <section className="rounded-[2rem] border border-white/80 bg-white/85 p-8 shadow-soft">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-ocean">
+                Source Pages
+              </p>
+              <p className="mt-2 text-sm text-slate-500">
+                {result.source_pages.length === 0
+                  ? "No live source pages were used for this run."
+                  : "Pages used during the evidence pass."}
+              </p>
+            </div>
+            {result.source_pages.length === 0 ? null : (
+              <div className="mt-6 space-y-3">
+                {result.source_pages.map((page) => (
+                  <a
+                    key={page.url}
+                    href={page.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-ocean/30 hover:bg-white"
+                  >
+                    <p className="text-sm font-semibold text-ink">{page.title}</p>
+                    <p className="mt-1 text-sm text-slate-600">{page.source}</p>
+                    <p className="mt-2 text-xs uppercase tracking-[0.2em] text-slate-500">{page.query}</p>
+                  </a>
+                ))}
+              </div>
+            )}
           </section>
         </>
       ) : null}

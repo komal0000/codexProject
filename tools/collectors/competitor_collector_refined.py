@@ -135,7 +135,11 @@ async def collect_competitors(
         if product_hint:
             queries.append((f"{product_hint} software alternatives Nepal", None))
 
-    tasks = [search_text_results(query, max_results=max_results) for query, _ in queries]
+    exclude = list(IGNORED_COMPETITOR_DOMAINS)
+    tasks = [
+        search_text_results(query, max_results=max_results, exclude_domains=exclude)
+        for query, _ in queries
+    ]
     batches = await asyncio.gather(*tasks, return_exceptions=True)
     signals = []
 

@@ -66,6 +66,18 @@ export function NewResearchForm() {
             placeholder="Monthly subscription with setup fee"
           />
         </label>
+        <label className="grid gap-2 text-sm font-medium text-slate-700 md:col-span-2">
+          Research Mode
+          <select
+            name="mode"
+            defaultValue="free_first"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none ring-0 transition focus:border-ocean"
+          >
+            <option value="free_first">Free First: Tavily basic search → DuckDuckGo fallback, real URLs + relevance scores</option>
+            <option value="fast_draft">Fast Draft: AI hypotheses only, no live citations</option>
+            <option value="grounded_paid">Grounded Paid: Tavily advanced search, deeper page content, higher signal quality</option>
+          </select>
+        </label>
       </div>
 
       <label className="grid gap-2 text-sm font-medium text-slate-700">
@@ -147,7 +159,7 @@ export function NewResearchForm() {
 
       <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-2">
         <p className="max-w-2xl text-sm text-slate-500">
-          Submission triggers a background job on the FastAPI backend, then redirects to the polling results page.
+          Free First keeps real URLs in the output while limiting web calls. Fast Draft skips live evidence for the fastest response.
         </p>
         <SubmitButton />
       </div>
