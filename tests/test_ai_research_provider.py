@@ -64,6 +64,14 @@ class AIResearchProviderTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.signals[0]["subject"], "Small Morang shops with WhatsApp demand")
 
     async def test_free_first_falls_back_to_heuristic_signals_with_urls(self) -> None:
+        from tools.ai_research_provider import SearchTask
+
+        fake_tasks = [
+            SearchTask(query="Morang retailers WhatsApp", signal_type="icp", city="Morang"),
+            SearchTask(query="Facebook Morang sellers", signal_type="channel", city="Morang"),
+            SearchTask(query="Morang business directory", signal_type="lead_source", city="Morang"),
+            SearchTask(query="WhatsApp chatbot alternatives Nepal", signal_type="competitor", city="Morang"),
+        ]
         fake_batches = [
             [SearchResult(title="Morang retailers use WhatsApp", body="Retail shops in Morang reply to WhatsApp buyers.", href="https://example.com/icp")],
             [SearchResult(title="Facebook sellers in Morang", body="Facebook and Instagram shops push buyers into WhatsApp.", href="https://example.com/channel")],
@@ -71,6 +79,9 @@ class AIResearchProviderTests(unittest.IsolatedAsyncioTestCase):
             [SearchResult(title="Chatbot software alternatives", body="Software alternatives for shop messaging and automation.", href="https://example.com/competitor")],
         ]
         with patch(
+            "tools.ai_research_provider.plan_search_tasks",
+            new=AsyncMock(return_value=fake_tasks),
+        ), patch(
             "tools.ai_research_provider.search_text_results",
             new=AsyncMock(side_effect=fake_batches),
         ), patch(

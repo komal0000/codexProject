@@ -53,7 +53,7 @@ class TavilySearchClient:
         self,
         api_key: str | None = None,
     ) -> None:
-        self.api_key = api_key or os.getenv("TAVILY_API_KEY", "")
+        self.api_key = os.getenv("TAVILY_API_KEY", "") if api_key is None else api_key
 
     @property
     def enabled(self) -> bool:
